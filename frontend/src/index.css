@@ -1,0 +1,18 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: "Inter", sans-serif;
+}
+
+/* Стиль для карток при наведенні */
+.group:hover .group-hover\:scale-105 {
+  transform: scale(1.05);
+}
+
+/* Плавні переходи */
+.transition-all {
+  transition: all 0.3s ease;
+}
