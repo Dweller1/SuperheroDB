@@ -159,9 +159,9 @@ const SuperheroList = () => {
             ))}
           </div>
 
-          {/* Пагінація */}
+          {/* Пагінація - ОНОВЛЕНО: той самий колір як основна сторінка */}
           {pagination.totalPages > 1 && (
-            <div className="flex justify-center items-center gap-4 bg-white bg-opacity-70 py-3 rounded-xl backdrop-blur-sm mx-4">
+            <div className="flex justify-center items-center gap-4 mt-8 p-4 bg-gradient-to-br from-indigo-50 to-blue-100 rounded-xl backdrop-blur-sm">
               <button
                 onClick={() => handlePageChange(pagination.page - 1)}
                 disabled={!pagination.hasPrev}
@@ -170,7 +170,7 @@ const SuperheroList = () => {
                 Назад
               </button>
 
-              <span className="text-indigo-700">
+              <span className="text-indigo-700 font-medium">
                 Сторінка {pagination.page} з {pagination.totalPages}
               </span>
 

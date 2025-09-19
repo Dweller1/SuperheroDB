@@ -23,6 +23,7 @@ const SuperheroForm = () => {
   });
 
   const [currentPower, setCurrentPower] = useState("");
+  const [currentImageUrl, setCurrentImageUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,6 +54,29 @@ const SuperheroForm = () => {
     }));
   };
 
+  const addImage = () => {
+    if (currentImageUrl.trim()) {
+      // Простая валидация URL
+      try {
+        new URL(currentImageUrl);
+        setFormData((prev) => ({
+          ...prev,
+          images: [...prev.images, currentImageUrl.trim()],
+        }));
+        setCurrentImageUrl("");
+      } catch (error) {
+        setError("Неправильний формат URL");
+      }
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index),
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -67,52 +91,6 @@ const SuperheroForm = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Перевірка формату файлу
-      const validImageTypes = [
-        "image/jpeg",
-        "image/jpg",
-        "image/png",
-        "image/gif",
-        "image/webp",
-        "image/svg+xml",
-      ];
-      if (!validImageTypes.includes(file.type)) {
-        setError(
-          "Будь ласка, виберіть файл зображення (JPEG, PNG, GIF, WEBP, SVG)"
-        );
-        return;
-      }
-
-      // Перевірка розміру файлу
-      if (file.size > 5 * 1024 * 1024) {
-        setError("Розмір файлу не повинен перевищувати 5MB");
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result;
-        if (typeof result === "string") {
-          setFormData((prev) => ({
-            ...prev,
-            images: [...prev.images, result],
-          }));
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const removeImage = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      images: prev.images.filter((_, i) => i !== index),
-    }));
   };
 
   return (
@@ -239,7 +217,7 @@ const SuperheroForm = () => {
 
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Зображення героя
+              Зображення героя (URL)
             </label>
 
             <div className="grid grid-cols-3 gap-4 mb-4">
@@ -261,18 +239,28 @@ const SuperheroForm = () => {
               ))}
             </div>
 
-            <label className="cursor-pointer inline-block">
-              <span className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
-                Завантажити фото
-              </span>
+            <div className="flex gap-2">
               <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                className="hidden"
-                multiple
+                type="text"
+                value={currentImageUrl}
+                onChange={(e) => setCurrentImageUrl(e.target.value)}
+                className="flex-1 p-2 border border-gray-300 rounded-lg"
+                placeholder="Вставте URL зображення..."
+                onKeyPress={(e) =>
+                  e.key === "Enter" && (e.preventDefault(), addImage())
+                }
               />
-            </label>
+              <button
+                type="button"
+                onClick={addImage}
+                className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+              >
+                Додати
+              </button>
+            </div>
+            <p className="text-sm text-gray-500 mt-2">
+              Вставте URL зображення (наприклад: https://example.com/image.jpg)
+            </p>
           </div>
 
           <div className="flex gap-4 pt-4 border-t border-gray-200">

@@ -31,7 +31,6 @@ export interface PaginationResponse {
 }
 
 export const superheroApi = {
-  // Отримати всіх супергероїв з пагінацією
   getAll: (
     page: number = 1,
     limit: number = 5,
@@ -41,38 +40,22 @@ export const superheroApi = {
       .get("", { params: { page, limit, search } })
       .then((response) => response.data),
 
-  // Отримати одного супергероя
   getOne: (id: string): Promise<Superhero> =>
     api.get(`/${id}`).then((response) => response.data),
 
-  // Створити супергероя
   create: (
     hero: Omit<Superhero, "id" | "createdAt" | "updatedAt">
   ): Promise<Superhero> => api.post("", hero).then((response) => response.data),
 
-  // Оновити супергероя - ВИПРАВЛЕНО: використовуємо PATCH замість PUT
   update: (id: string, hero: Partial<Superhero>): Promise<Superhero> =>
     api.patch(`/${id}`, hero).then((response) => response.data),
 
-  // Видалити супергероя
   delete: (id: string): Promise<void> =>
     api.delete(`/${id}`).then((response) => response.data),
 
-  // Додати зображення (новий метод з FormData)
-  addImage: (id: string, imageFile: File): Promise<Superhero> => {
-    const formData = new FormData();
-    formData.append("image", imageFile);
+  addImage: (id: string, imageUrl: string): Promise<Superhero> =>
+    api.post(`/${id}/images`, { imageUrl }).then((response) => response.data),
 
-    return api
-      .post(`/${id}/images`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      })
-      .then((response) => response.data);
-  },
-
-  // Видалити зображення
   removeImage: (id: string, imageUrl: string): Promise<Superhero> =>
     api
       .delete(`/${id}/images`, { data: { imageUrl } })

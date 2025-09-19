@@ -12,7 +12,7 @@ const SuperheroDetails = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedHero, setEditedHero] = useState<Partial<Superhero> | null>(null);
   const [selectedImage, setSelectedImage] = useState<string>("");
-  const [uploading, setUploading] = useState(false);
+  const [newImageUrl, setNewImageUrl] = useState("");
 
   useEffect(() => {
     if (id) {
@@ -52,10 +52,7 @@ const SuperheroDetails = () => {
 
     try {
       setError(null);
-
-      // Видаляємо поля, які не повинні оновлюватися
       const { id: _, createdAt, updatedAt, ...updateData } = editedHero;
-
       const updatedHero = await superheroApi.update(id, updateData);
       setSuperhero(updatedHero);
       setEditedHero(updatedHero);
@@ -72,6 +69,7 @@ const SuperheroDetails = () => {
     setEditedHero(superhero || null);
     setIsEditing(false);
     setError(null);
+    setNewImageUrl("");
   };
 
   const handleInputChange = (field: keyof Superhero, value: any) => {
@@ -104,42 +102,26 @@ const SuperheroDetails = () => {
     handleInputChange("superpowers", newSuperpowers);
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && id) {
-      const validImageTypes = [
-        "image/jpeg",
-        "image/jpg",
-        "image/png",
-        "image/gif",
-        "image/webp",
-        "image/svg+xml",
-      ];
-      if (!validImageTypes.includes(file.type)) {
-        setError(
-          "Будь ласка, виберіть файл зображення (JPEG, PNG, GIF, WEBP, SVG)"
-        );
-        return;
-      }
+  const handleAddImage = async () => {
+    if (!id || !newImageUrl.trim()) return;
 
-      if (file.size > 5 * 1024 * 1024) {
-        setError("Розмір файлу не повинен перевищувати 5MB");
-        return;
-      }
+    try {
+      setError(null);
 
+      // Простая валидация URL
       try {
-        setUploading(true);
-        setError(null);
-        await superheroApi.addImage(id, file);
-        await fetchSuperhero(id);
-      } catch (err: any) {
-        setError(
-          err.response?.data?.message || "Не вдалося завантажити зображення"
-        );
-        console.error("Error uploading image:", err);
-      } finally {
-        setUploading(false);
+        new URL(newImageUrl);
+      } catch (err) {
+        setError("Неправильний формат URL");
+        return;
       }
+
+      await superheroApi.addImage(id, newImageUrl.trim());
+      setNewImageUrl("");
+      await fetchSuperhero(id);
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Не вдалося додати зображення");
+      console.error("Error adding image:", err);
     }
   };
 
@@ -332,33 +314,26 @@ const SuperheroDetails = () => {
                 )}
 
                 {isEditing && (
-                  <div className="space-y-2">
-                    <label className="bg-blue-500 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-blue-600 transition-colors inline-flex items-center disabled:bg-gray-400 disabled:cursor-not-allowed">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5 mr-2"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 4v16m8-8H4"
-                        />
-                      </svg>
-                      {uploading ? "Завантаження..." : "Додати нове зображення"}
+                  <div className="space-y-3">
+                    <div className="flex gap-2">
                       <input
-                        type="file"
-                        accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,image/svg+xml"
-                        onChange={handleImageUpload}
-                        className="hidden"
-                        disabled={uploading}
+                        type="text"
+                        value={newImageUrl}
+                        onChange={(e) => setNewImageUrl(e.target.value)}
+                        placeholder="Вставте URL зображення"
+                        className="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                       />
-                    </label>
+                      <button
+                        onClick={handleAddImage}
+                        disabled={!newImageUrl.trim()}
+                        className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                      >
+                        Додати
+                      </button>
+                    </div>
                     <p className="text-sm text-gray-500">
-                      Підтримуються: JPEG, PNG, GIF, WEBP, SVG (макс. 5MB)
+                      Вставте URL зображення (наприклад:
+                      https://example.com/image.jpg)
                     </p>
                   </div>
                 )}
