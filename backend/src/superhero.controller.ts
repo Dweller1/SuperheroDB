@@ -9,18 +9,12 @@ import {
   Query,
   UsePipes,
   Patch,
-  UploadedFiles,
-  UseInterceptors,
   BadRequestException,
-  UploadedFile,
 } from "@nestjs/common";
 import { SuperheroService } from "./superhero.service";
 import { SuperheroSchema } from "./superhero.dto";
 import type { SuperheroDto } from "./superhero.dto";
 import { ZodValidationPipe } from "./validation.pipe";
-import { FileInterceptor, FilesInterceptor } from "@nestjs/platform-express";
-import { diskStorage } from "multer";
-import { extname } from "path";
 
 @Controller("superheroes")
 export class SuperheroController {
@@ -34,11 +28,10 @@ export class SuperheroController {
 
   @Get()
   async findAll(
-    @Query("page") page: string = "1", // Отримуємо як рядок
-    @Query("limit") limit: string = "5", // Отримуємо як рядок
+    @Query("page") page: string = "1",
+    @Query("limit") limit: string = "5",
     @Query("search") search?: string
   ) {
-    // Перетворюємо рядки на числа з перевіркою
     const pageNum = Math.max(1, parseInt(page, 10) || 1);
     const limitNum = Math.max(1, parseInt(limit, 10) || 5);
 
@@ -78,41 +71,18 @@ export class SuperheroController {
   }
 
   @Post(":id/images")
-  @UseInterceptors(
-    FileInterceptor("image", {
-      storage: diskStorage({
-        destination: "./uploads",
-        filename: (req, file, callback) => {
-          const uniqueSuffix =
-            Date.now() + "-" + Math.round(Math.random() * 1e9);
-          callback(
-            null,
-            file.fieldname + "-" + uniqueSuffix + extname(file.originalname)
-          );
-        },
-      }),
-      fileFilter: (req, file, callback) => {
-        const allowedTypes = /jpeg|jpg|png|gif|webp|svg/;
-        const ext = allowedTypes.test(extname(file.originalname).toLowerCase());
-        const mime = allowedTypes.test(file.mimetype);
+  async addImage(@Param("id") id: string, @Body("imageUrl") imageUrl: string) {
+    if (!imageUrl) {
+      throw new BadRequestException("Image URL is required");
+    }
 
-        if (mime && ext) {
-          return callback(null, true);
-        } else {
-          callback(new Error("Непідтримуваний формат зображення"), false);
-        }
-      },
-      limits: {
-        fileSize: 5 * 1024 * 1024, // 5MB
-      },
-    })
-  )
-  async addImage(
-    @Param("id") id: string,
-    @UploadedFile() file: Express.Multer.File
-  ) {
-    // Тут обробка файлу - збереження шляху до файлу в базу даних
-    const imageUrl = `/uploads/${file.filename}`;
+    // Простая валидация URL
+    try {
+      new URL(imageUrl);
+    } catch (error) {
+      throw new BadRequestException("Invalid URL format");
+    }
+
     return this.superheroService.addImage(id, imageUrl);
   }
 }

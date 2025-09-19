@@ -3,6 +3,7 @@ import { SuperheroEntity } from "./superhero.entity";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository, Like, FindManyOptions } from "typeorm";
 import { SuperheroDto } from "./superhero.dto";
+
 @Injectable()
 export class SuperheroService {
   constructor(
@@ -10,7 +11,6 @@ export class SuperheroService {
     private readonly superheroRepository: Repository<SuperheroEntity>
   ) {}
 
-  // Допоміжна функція для перетворення рядка в масив
   private parseImages(imagesString: string): string[] {
     if (!imagesString || imagesString.trim() === "") {
       return [];
@@ -18,7 +18,6 @@ export class SuperheroService {
     return imagesString.split(",").filter((img) => img.trim() !== "");
   }
 
-  // Допоміжна функція для перетворення масиву в рядок
   private stringifyImages(imagesArray: string[]): string {
     return imagesArray.filter((img) => img.trim() !== "").join(",");
   }
@@ -36,7 +35,6 @@ export class SuperheroService {
         );
       }
 
-      // Конвертуємо images з масиву в рядок для зберігання
       const superheroData: Partial<SuperheroEntity> = {
         nickname: hero.nickname,
         realName: hero.realName,
@@ -49,7 +47,6 @@ export class SuperheroService {
       const newSuperhero = this.superheroRepository.create(superheroData);
       const savedHero = await this.superheroRepository.save(newSuperhero);
 
-      // Конвертуємо назад в масив для відповіді
       return {
         ...savedHero,
         images: this.parseImages(savedHero.images),
@@ -84,7 +81,6 @@ export class SuperheroService {
       options
     );
 
-    // Парсимо images для кожного супергероя
     const parsedSuperheroes = superheroes.map((hero) => ({
       ...hero,
       images: this.parseImages(hero.images),
@@ -113,7 +109,6 @@ export class SuperheroService {
       );
     }
 
-    // Парсимо images назад в масив
     return {
       ...superhero,
       images: this.parseImages(superhero.images),
@@ -143,10 +138,8 @@ export class SuperheroService {
       }
     }
 
-    // Створюємо об'єкт для оновлення з правильними типами
     const updateEntity: Partial<SuperheroEntity> = {};
 
-    // Копіюємо поля, які потрібно оновити
     if (updateData.nickname !== undefined)
       updateEntity.nickname = updateData.nickname;
     if (updateData.realName !== undefined)
@@ -158,12 +151,10 @@ export class SuperheroService {
     if (updateData.catchPhrase !== undefined)
       updateEntity.catchPhrase = updateData.catchPhrase;
 
-    // Конвертуємо images якщо вони є в updateData
     if (updateData.images !== undefined) {
       updateEntity.images = this.stringifyImages(updateData.images);
     }
 
-    // Оновлюємо сутність
     Object.assign(superhero, updateEntity);
     const updatedHero = await this.superheroRepository.save(superhero);
 
@@ -198,7 +189,6 @@ export class SuperheroService {
 
     const currentImages = this.parseImages(superhero.images);
 
-    // Перевіряємо, чи вже існує таке зображення
     if (!currentImages.includes(imageUrl)) {
       const updatedImages = [...currentImages, imageUrl];
       superhero.images = this.stringifyImages(updatedImages);
@@ -210,7 +200,6 @@ export class SuperheroService {
       };
     }
 
-    // Якщо зображення вже існує, повертаємо поточний стан
     return {
       ...superhero,
       images: currentImages,
@@ -230,7 +219,6 @@ export class SuperheroService {
     const currentImages = this.parseImages(superhero.images);
     const updatedImages = currentImages.filter((img) => img !== imageUrl);
 
-    // Перевіряємо, чи щось змінилося
     if (updatedImages.length !== currentImages.length) {
       superhero.images = this.stringifyImages(updatedImages);
       const updatedHero = await this.superheroRepository.save(superhero);
@@ -241,7 +229,6 @@ export class SuperheroService {
       };
     }
 
-    // Якщо зображення не знайдено, повертаємо поточний стан
     return {
       ...superhero,
       images: currentImages,
